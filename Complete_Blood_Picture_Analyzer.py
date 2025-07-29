@@ -116,25 +116,19 @@ if file:
                  title="🔬 Blood Parameter Levels", height=500)
     st.plotly_chart(fig, use_container_width=True)
 
-    def create_pdf(results):
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", 'B', 16)
-        pdf.cell(0, 10, "Complete Blood Picture Report Summary", ln=1, align='C')
-        pdf.ln(5)
-        pdf.set_font("Arial", '', 12)
-        for item in results:
-            pdf.cell(0, 10, f"{item['Parameter']}: {item['Value']} - {item['Status']} - {item['Interpretation']}", ln=1)
-        return pdf.output(dest='S').encode('latin1')
+  def create_pdf(results):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(0, 10, "Complete Blood Picture Report Summary", ln=1, align='C')
+    pdf.ln(5)
+    pdf.set_font("Arial", '', 12)
+    for item in results:
+        # Strip emojis from Status
+        clean_status = item['Status'].replace("✅", "Normal").replace("🔺", "High").replace("🔻", "Low")
+        pdf.cell(0, 10, f"{item['Parameter']}: {item['Value']} - {clean_status} - {item['Interpretation']}", ln=1)
+    return pdf.output(dest='S').encode('latin1')
 
-    st.download_button("📄 Download Report (PDF)", data=create_pdf(result), file_name="cbp_report_summary.pdf")
-
-    st.markdown("""
-    <hr style="border:1px solid #ccc;"/>
-    <p style="text-align:center; font-size:14px;">
-    🧑‍⚕️ Created by <strong>Sai Preethi Ananya Naidu</strong> | 📧 <a href="mailto:preethiananyanaidu@gmail.com">preethiananyanaidu@gmail.com</a>
-    </p>
-    """, unsafe_allow_html=True)
 
 else:
     st.info("Please upload your Complete Blood Picture (CBP) file to begin analysis.")
