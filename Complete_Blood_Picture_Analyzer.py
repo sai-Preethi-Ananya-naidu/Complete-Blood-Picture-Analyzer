@@ -26,7 +26,7 @@ st.markdown("""
 st.markdown("<h1>🧪 Complete Blood Picture Analyzer</h1>", unsafe_allow_html=True)
 
 st.markdown("""
-💉 **Welcome to the digital lab!** This tool helps you interpret your Complete Blood Picture (CBP) report with clear medical insights, colorful charts, and downloadable summaries.
+💉 **Welcome to the digital lab!** This tool helps you interpret your Complete Blood Picture (CBP) report with clear medical insights, colorful charts, dietary suggestions, and downloadable summaries.
 """)
 
 file = st.file_uploader("📤 Upload Blood Report (CSV, Excel, PDF, or Image)", type=["csv", "xlsx", "pdf", "png", "jpg", "jpeg"])
@@ -51,24 +51,24 @@ normal_ranges = {
     "Basophils": (0, 2)
 }
 
-interpretation_notes = {
-    "Hemoglobin": "Low: Anemia, High: Polycythemia",
-    "RBC": "Low: Anemia, High: Dehydration or Polycythemia",
-    "WBC": "Low: Leukopenia, High: Infection or Leukemia",
-    "Platelets": "Low: Thrombocytopenia, High: Risk of clotting",
-    "PCV": "Low: Anemia, High: Dehydration",
-    "MCV": "Low: Microcytic anemia, High: Macrocytic anemia",
-    "MCH": "Low: Hypochromic anemia, High: Macrocytosis",
-    "MCHC": "Low: Iron deficiency anemia, High: Spherocytosis",
-    "RDW CV": "High: Mixed anemia or B12/iron deficiency",
-    "RDW SD": "High RDW SD may indicate anisocytosis (RBC size variation)",
-    "PDW": "High PDW suggests platelet anisocytosis",
-    "MPV": "High MPV indicates larger platelets, common in thrombocytopenia recovery",
-    "Neutrophils": "High: Bacterial infection, Low: Bone marrow suppression",
-    "Lymphocytes": "High: Viral infections, Low: Immunodeficiency",
-    "Eosinophils": "High: Allergies or parasitic infections",
-    "Monocytes": "High: Chronic inflammation or infection",
-    "Basophils": "High: Allergic response or chronic myeloid leukemia"
+diet_suggestions = {
+    "Hemoglobin": "Include iron-rich foods like spinach, red meat, lentils, and fortified cereals.",
+    "RBC": "Eat iron and vitamin B12-rich foods like eggs, dairy, poultry, and beans.",
+    "WBC": "Boost immunity with citrus fruits, garlic, and probiotic-rich foods.",
+    "Platelets": "Consume papaya leaf extract, pomegranate, and vitamin C-rich foods.",
+    "PCV": "Stay hydrated if high; if low, increase iron-rich food intake.",
+    "MCV": "If low, add iron; if high, focus on folate and B12 (leafy greens, liver, eggs).",
+    "MCH": "Add lean meat, legumes, and green vegetables.",
+    "MCHC": "Consume eggs, fish, and green leafy vegetables.",
+    "RDW CV": "Balance iron and vitamin B12 intake.",
+    "RDW SD": "Include whole grains, meat, and vegetables.",
+    "PDW": "Ensure a healthy diet with antioxidants and omega-3s.",
+    "MPV": "Balance vitamin B12 and folate levels.",
+    "Neutrophils": "Consume zinc-rich foods like seeds and shellfish.",
+    "Lymphocytes": "Eat berries, turmeric, and green tea.",
+    "Eosinophils": "Reduce allergens; eat anti-inflammatory foods like ginger and turmeric.",
+    "Monocytes": "Add garlic, mushrooms, and leafy greens.",
+    "Basophils": "Avoid allergens and processed foods."
 }
 
 def analyze_value(val, norm_range):
@@ -78,6 +78,13 @@ def analyze_value(val, norm_range):
         return "High"
     else:
         return "Normal"
+
+def consult_doctor_advice(status):
+    if status == "Low":
+        return "⚠️ Consider consulting a physician for possible deficiency."
+    elif status == "High":
+        return "⚠️ Elevated levels detected. Medical consultation is advised."
+    return "✅ Within normal range."
 
 if file:
     if file.name.endswith("csv"):
@@ -99,36 +106,41 @@ if file:
     st.subheader("📋 Uploaded Blood Report")
     st.dataframe(df.head(), use_container_width=True)
 
-    result = []
-    for param, (low, high) in normal_ranges.items():
-        if param in df.columns:
-            value = df[param].iloc[0]
-            status = analyze_value(value, (low, high))
-            comment = interpretation_notes.get(param, "")
-            result.append({"Parameter": param, "Value": value, "Status": status, "Interpretation": comment})
+    for index, row in df.iterrows():
+        st.markdown(f"### 🧾 Report for Row {index+1}")
+        result = []
+        for param, (low, high) in normal_ranges.items():
+            if param in row:
+                value = row[param]
+                status = analyze_value(value, (low, high))
+                diet = diet_suggestions.get(param, "")
+                advice = consult_doctor_advice(status)
+                result.append({"Parameter": param, "Value": value, "Status": status, "Diet Suggestion": diet, "Doctor Advice": advice})
 
-    result_df = pd.DataFrame(result)
-    st.subheader("🩸 Interpretation of Blood Report")
-    st.dataframe(result_df, use_container_width=True)
+        result_df = pd.DataFrame(result)
+        st.dataframe(result_df, use_container_width=True)
 
-    fig = px.bar(result_df, x="Parameter", y="Value", color="Status",
-                 color_discrete_map={"Normal": "green", "Low": "red", "High": "orange"},
-                 title="🔬 Blood Parameter Levels", height=500)
-    st.plotly_chart(fig, use_container_width=True)
+        fig = px.bar(result_df, x="Parameter", y="Value", color="Status",
+                     color_discrete_map={"Normal": "green", "Low": "red", "High": "orange"},
+                     title=f"🧬 Blood Levels for Row {index+1}", height=500)
+        st.plotly_chart(fig, use_container_width=True)
 
-    def create_pdf(results):
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", 'B', 16)
-        pdf.cell(0, 10, "Complete Blood Picture Report Summary", ln=1, align='C')
-        pdf.ln(5)
-        pdf.set_font("Arial", '', 12)
-        for item in results:
-            clean_status = item['Status']
-            pdf.cell(0, 10, f"{item['Parameter']}: {item['Value']} - {clean_status} - {item['Interpretation']}", ln=1)
-        return pdf.output(dest='S').encode('latin1')
+        def create_pdf(results):
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial", 'B', 16)
+            pdf.cell(0, 10, "Complete Blood Picture Report Summary", ln=1, align='C')
+            pdf.ln(5)
+            pdf.set_font("Arial", '', 12)
+            for item in results:
+                line = f"{item['Parameter']}: {item['Value']} - {item['Status']}"
+                pdf.cell(0, 10, line, ln=1)
+                pdf.multi_cell(0, 10, f"Diet Suggestion: {item['Diet Suggestion']}")
+                pdf.multi_cell(0, 10, f"Doctor Advice: {item['Doctor Advice']}")
+                pdf.ln(2)
+            return pdf.output(dest='S').encode('latin1')
 
-    st.download_button("📄 Download Report (PDF)", data=create_pdf(result), file_name="cbp_report_summary.pdf")
+        st.download_button(f"📄 Download Report Row {index+1} (PDF)", data=create_pdf(result), file_name=f"cbp_report_row_{index+1}.pdf")
 
     st.markdown("""
     <hr style="border:1px solid #ccc;"/>
