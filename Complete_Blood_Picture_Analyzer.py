@@ -86,6 +86,20 @@ def consult_doctor_advice(status):
         return "Elevated levels detected. Medical consultation is advised."
     return "Within normal range."
 
+def create_pdf(diet_advice):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(0, 10, "CBP Report Summary: Diet & Medical Advice", ln=1, align='C')
+    pdf.ln(5)
+    pdf.set_font("Arial", '', 12)
+    for item in diet_advice:
+        pdf.cell(0, 10, f"{item['Parameter']}", ln=1)
+        pdf.multi_cell(0, 10, f"Diet Suggestion: {item['Diet Suggestion']}")
+        pdf.multi_cell(0, 10, f"Doctor Advice: {item['Doctor Advice']}")
+        pdf.ln(2)
+    return pdf.output(dest='S').encode('latin1')
+
 if file:
     if file.name.endswith("csv"):
         df = pd.read_csv(file)
@@ -114,17 +128,20 @@ if file:
             if param in row:
                 value = row[param]
                 status = analyze_value(value, (low, high))
-                diet = diet_suggestions.get(param, "")
-                advice = consult_doctor_advice(status)
+                if status != "Normal":
+                    diet = diet_suggestions.get(param, "")
+                    advice = consult_doctor_advice(status)
+                    diet_advice.append({"Parameter": param, "Diet Suggestion": diet, "Doctor Advice": advice})
                 result.append({"Parameter": param, "Value": value, "Status": status})
-                diet_advice.append({"Parameter": param, "Diet Suggestion": diet, "Doctor Advice": advice})
 
         result_df = pd.DataFrame(result)
         st.dataframe(result_df, use_container_width=True)
 
-        st.markdown("#### 🍽️ Diet & Medical Advice")
-        advice_df = pd.DataFrame(diet_advice)
-        st.dataframe(advice_df, use_container_width=True)
+        if diet_advice:
+            st.markdown("#### 🍽️ Diet & Medical Advice (Only for Abnormal Values)")
+            advice_df = pd.DataFrame(diet_advice)
+            st.dataframe(advice_df, use_container_width=True)
+            st.download_button(f"📄 Download Advice PDF (Row {index+1})", data=create_pdf(diet_advice), file_name=f"cbp_advice_row_{index+1}.pdf")
 
         fig = px.bar(result_df, x="Parameter", y="Value", color="Status",
                      color_discrete_map={"Normal": "green", "Low": "red", "High": "orange"},
