@@ -1,22 +1,32 @@
-# 🧪 Complete Blood Picture (CBP) Analyzer
+# 🧪 Complete Blood Picture Analyzer
 
-This Streamlit app analyzes uploaded blood reports (CSV/XLSX) for 17+ key CBC parameters and provides:
-- Color-coded interpretation (Low / Normal / High)
-- Medical insights for each result
-- Interactive bar chart for visual analysis
-- Downloadable PDF summary
+This Streamlit app helps users analyze their CBC (Complete Blood Count) reports easily by:
+- Uploading blood reports (CSV, Excel, PDF, or images)
+- Automatically interpreting values
+- Highlighting low/high/normal ranges
+- Displaying medical explanations and interactive graphs
+- Downloading a PDF summary of the results
+
+---
 
 ## ✅ Features
-- Upload any CBP report in `.csv` or `.xlsx` format
-- Checks against medical reference ranges
-- Highlights abnormal values with clinical comments
-- Graphical bar chart of blood parameters
-- PDF summary download
+- 📥 Upload report (CSV, XLSX, Image, or PDF*)
+- 📊 Visualizations: Bar chart colored by health status
+- 📄 PDF Summary: Downloadable report
+- 🩺 Medical insights and range-based flags
 
-## 🧬 Parameters Analyzed
-Hemoglobin, RBC, WBC, Platelets, PCV, MCV, MCH, MCHC, RDW-CV, RDW-SD, PDW, MPV, Neutrophils, Lymphocytes, Eosinophils, Monocytes, Basophils
+> ⚠️ Note: PDF and image upload only previews the file (OCR integration coming soon).
 
-## 🚀 How to Run
+---
+
+## 🔬 Parameters Interpreted
+- Hemoglobin, RBC, WBC, Platelets, PCV, MCV, MCH, MCHC  
+- RDW CV, RDW SD, PDW, MPV  
+- Neutrophils, Lymphocytes, Eosinophils, Monocytes, Basophils
+
+---
+
+## 💻 How to Run Locally
 ```bash
 pip install -r requirements.txt
 streamlit run cbp_analyzer.py
