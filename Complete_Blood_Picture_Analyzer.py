@@ -3,6 +3,8 @@ import pandas as pd
 from fpdf import FPDF
 from io import BytesIO
 import plotly.express as px
+from PIL import Image
+import tempfile
 
 st.set_page_config(page_title="Complete Blood Picture Analyzer", layout="wide")
 
@@ -27,7 +29,7 @@ st.markdown("""
 💉 **Welcome to the digital lab!** This tool helps you interpret your Complete Blood Picture (CBP) report with clear medical insights, colorful charts, and downloadable summaries.
 """)
 
-file = st.file_uploader("📤 Upload Blood Report (CSV or Excel)", type=["csv", "xlsx"])
+file = st.file_uploader("📤 Upload Blood Report (CSV, Excel, PDF, or Image)", type=["csv", "xlsx", "pdf", "png", "jpg", "jpeg"])
 
 normal_ranges = {
     "Hemoglobin": (11.0, 15.0),
@@ -80,8 +82,18 @@ def analyze_value(val, norm_range):
 if file:
     if file.name.endswith("csv"):
         df = pd.read_csv(file)
-    else:
+    elif file.name.endswith("xlsx"):
         df = pd.read_excel(file)
+    elif file.name.endswith("pdf"):
+        st.warning("🔒 PDF parsing is currently not supported. Please upload a CSV, Excel, or Image file.")
+        st.stop()
+    elif file.name.lower().endswith((".png", ".jpg", ".jpeg")):
+        st.image(file, caption="Uploaded Image", use_column_width=True)
+        st.info("📷 OCR for image extraction coming soon! Please upload a CSV or Excel for now.")
+        st.stop()
+    else:
+        st.error("Unsupported file type.")
+        st.stop()
 
     df.columns = [c.strip() for c in df.columns]
     st.subheader("📋 Uploaded Blood Report")
