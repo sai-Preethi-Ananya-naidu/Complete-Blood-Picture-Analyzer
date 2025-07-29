@@ -81,10 +81,10 @@ def analyze_value(val, norm_range):
 
 def consult_doctor_advice(status):
     if status == "Low":
-        return "⚠️ Consider consulting a physician for possible deficiency."
+        return "Consider consulting a physician for possible deficiency."
     elif status == "High":
-        return "⚠️ Elevated levels detected. Medical consultation is advised."
-    return "✅ Within normal range."
+        return "Elevated levels detected. Medical consultation is advised."
+    return "Within normal range."
 
 if file:
     if file.name.endswith("csv"):
@@ -109,38 +109,27 @@ if file:
     for index, row in df.iterrows():
         st.markdown(f"### 🧾 Report for Row {index+1}")
         result = []
+        diet_advice = []
         for param, (low, high) in normal_ranges.items():
             if param in row:
                 value = row[param]
                 status = analyze_value(value, (low, high))
                 diet = diet_suggestions.get(param, "")
                 advice = consult_doctor_advice(status)
-                result.append({"Parameter": param, "Value": value, "Status": status, "Diet Suggestion": diet, "Doctor Advice": advice})
+                result.append({"Parameter": param, "Value": value, "Status": status})
+                diet_advice.append({"Parameter": param, "Diet Suggestion": diet, "Doctor Advice": advice})
 
         result_df = pd.DataFrame(result)
         st.dataframe(result_df, use_container_width=True)
+
+        st.markdown("#### 🍽️ Diet & Medical Advice")
+        advice_df = pd.DataFrame(diet_advice)
+        st.dataframe(advice_df, use_container_width=True)
 
         fig = px.bar(result_df, x="Parameter", y="Value", color="Status",
                      color_discrete_map={"Normal": "green", "Low": "red", "High": "orange"},
                      title=f"🧬 Blood Levels for Row {index+1}", height=500)
         st.plotly_chart(fig, use_container_width=True)
-
-        def create_pdf(results):
-            pdf = FPDF()
-            pdf.add_page()
-            pdf.set_font("Arial", 'B', 16)
-            pdf.cell(0, 10, "Complete Blood Picture Report Summary", ln=1, align='C')
-            pdf.ln(5)
-            pdf.set_font("Arial", '', 12)
-            for item in results:
-                line = f"{item['Parameter']}: {item['Value']} - {item['Status']}"
-                pdf.cell(0, 10, line, ln=1)
-                pdf.multi_cell(0, 10, f"Diet Suggestion: {item['Diet Suggestion']}")
-                pdf.multi_cell(0, 10, f"Doctor Advice: {item['Doctor Advice']}")
-                pdf.ln(2)
-            return pdf.output(dest='S').encode('latin1')
-
-        st.download_button(f"📄 Download Report Row {index+1} (PDF)", data=create_pdf(result), file_name=f"cbp_report_row_{index+1}.pdf")
 
     st.markdown("""
     <hr style="border:1px solid #ccc;"/>
