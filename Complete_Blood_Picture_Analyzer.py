@@ -29,7 +29,7 @@ st.markdown("""
 💉 **Welcome to the digital lab!** This tool helps you interpret your Complete Blood Picture (CBP) report with clear medical insights, colorful charts, dietary suggestions, and downloadable summaries.
 """)
 
-file = st.file_uploader("📤 Upload Blood Report (CSV, Excel, PDF, or Image)", type=["csv", "xlsx", "pdf", "png", "jpg", "jpeg"])
+file = st.file_uploader("📤 Upload Blood Report (CSV or Excel only)", type=["csv", "xlsx"])
 
 normal_ranges = {
     "Hemoglobin": (11.0, 15.0),
@@ -105,15 +105,8 @@ if file:
         df = pd.read_csv(file)
     elif file.name.endswith("xlsx"):
         df = pd.read_excel(file)
-    elif file.name.endswith("pdf"):
-        st.warning("🔒 PDF parsing is currently not supported. Please upload a CSV, Excel, or Image file.")
-        st.stop()
-    elif file.name.lower().endswith((".png", ".jpg", ".jpeg")):
-        st.image(file, caption="Uploaded Image", use_column_width=True)
-        st.info("📷 OCR for image extraction coming soon! Please upload a CSV or Excel for now.")
-        st.stop()
     else:
-        st.error("Unsupported file type.")
+        st.error("Unsupported file type. Please upload CSV or Excel only.")
         st.stop()
 
     df.columns = [c.strip() for c in df.columns]
@@ -156,4 +149,4 @@ if file:
     """, unsafe_allow_html=True)
 
 else:
-    st.info("Please upload your Complete Blood Picture (CBP) file to begin analysis.")
+    st.info("Please upload your Complete Blood Picture (CBP) file (CSV or Excel) to begin analysis.")
